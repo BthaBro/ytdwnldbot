@@ -25,3 +25,4 @@ echo_handler = MessageHandler(Filters.text, echo)
 dispatcher.add_handler(echo_handler)
 
 updater.start_polling()
+updater.idle()
