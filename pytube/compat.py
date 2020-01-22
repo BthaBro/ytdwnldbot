@@ -18,7 +18,7 @@ if PY2:
     from urllib2 import quote
     from urllib2 import unquote
     from urllib2 import urlopen
-    from urlparse import parse_qsl
+    from urlparse import parse_qs
     from HTMLParser import HTMLParser
 
     def install_proxy(proxy_handler):
