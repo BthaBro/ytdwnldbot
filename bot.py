@@ -14,7 +14,7 @@ SETTINGS, VIDEO  = range(2)
 def start(update, context): # start command
     user = update.message.from_user
     logger.info("User %s started the conversation.", user.first_name)
-    context.bot.send_message(chat_id=update.effective_chat.id, text="Hello {}✌️. I can download videos and music from youtube😎.".format
+    context.bot.send_message(chat_id=update.effective_chat.id, text="Hello {}✌️. I can download videos and audios from youtube😎.".format
         (update.message.from_user.first_name))
 
 
@@ -77,7 +77,7 @@ AUDIO = range(1)
 
 def audio(update, context):
     user = update.message.from_user
-    logger.info("User %s called /music comand", user.first_name)
+    logger.info("User %s called /audio comand", user.first_name)
     context.bot.send_message(chat_id = update.effective_chat.id, text = "Send me a link for audio track")
 
     return AUDIO
@@ -126,7 +126,7 @@ def main(): # main fuction
         fallbacks=[CommandHandler('cancel', cancel)]
     )
     conv_handler_audio = ConversationHandler(
-    entry_points=[CommandHandler('video', video)],
+    entry_points=[CommandHandler('audio', audio)],
 
     states = {
         AUDIO : [MessageHandler(Filters.text, audio_send)]
@@ -136,8 +136,6 @@ def main(): # main fuction
     )
     dp.add_handler(conv_handler_audio)
     dp.add_handler(conv_handler_video)
-    dp.add_handler(CommandHandler('audio', audio))
-    dp.add_handler(MessageHandler(Filters.text, audio_send))
     dp.add_error_handler(error)
     dp.add_handler(CommandHandler('help', help))
 
