@@ -102,6 +102,13 @@ def audio_send(update, context):
             buf.seek(0)
             context.bot.send_audio(chat_id = update.effective_chat.id, audio = buf)
 
+def error(update, context):
+    """Log Errors caused by Updates."""
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
+
+def help(update, context):
+    update.message.reply_text("Use /start to test this bot.")
+
 
 def main(): # main fuction
     updater = Updater(token='1072871384:AAFGbIjIt1OO4rnbMDqIIn1Sco3sZhjVW_8', use_context=True)
@@ -131,6 +138,9 @@ def main(): # main fuction
     dp.add_handler(conv_handler_video)
     dp.add_handler(CommandHandler('audio', audio))
     dp.add_handler(MessageHandler(Filters.text, audio_send))
+    dp.add_error_handler(error)
+    dp.add_handler(CommandHandler('help', help))
+
     # start the Bot
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
