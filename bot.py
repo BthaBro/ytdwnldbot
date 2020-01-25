@@ -3,7 +3,9 @@ from telegram import InlineKeyboardButton, InlineKeyboardMarkup, ReplyKeyboardMa
 import pytube
 from io import BytesIO
 import logging
-
+import os
+import sys
+from threading import Thread
 # Eanble logging
 logging.basicConfig(format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
                      level=logging.INFO)
@@ -99,15 +101,48 @@ def audio_send(update, context):
             context.bot.send_audio(chat_id = update.effective_chat.id, audio = buf)
 
 def error(update, context):
-    """Log Errors caused by Updates."""
-    logger.warning('Update "%s" caused error "%s"', update, context.error)
+    # add all the dev user_ids in this list. You can also add ids of channels or groups.
+    devs = [177517124]
+    # we want to notify the user of this problem. This will always work, but not notify users if the update is an
+    # callback or inline query, or a poll update. In case you want this, keep in mind that sending the message
+    # could fail
+    if update.effective_message:
+        text = "Hey. I'm sorry to inform you that an error happened while I tried to handle your update. " \
+               "My developer will be notified."
+        update.effective_message.reply_text(text)
+    # This traceback is created with accessing the traceback object from the sys.exc_info, which is returned as the
+    # third value of the returned tuple. Then we use the traceback.format_tb to get the traceback as a string, which
+    # for a weird reason separates the line breaks in a list, but keeps the linebreaks itself. So just joining an
+    # empty string works fine.
+    trace = "".join(traceback.format_tb(sys.exc_info()[2]))
+    # lets try to get as much information from the telegram update as possible
+    payload = ""
+    # normally, we always have an user. If not, its either a channel or a poll update.
+    if update.effective_user:
+        payload += f' with the user {mention_html(update.effective_user.id, update.effective_user.first_name)}'
+    # there are more situations when you don't get a chat
+    if update.effective_chat:
+        payload += f' within the chat <i>{update.effective_chat.title}</i>'
+        if update.effective_chat.username:
+            payload += f' (@{update.effective_chat.username})'
+    # but only one where you have an empty payload by now: A poll (buuuh)
+    if update.poll:
+        payload += f' with the poll id {update.poll.id}.'
+    # lets put this in a "well" formatted text
+    text = f"Hey.\n The error <code>{context.error}</code> happened{payload}. The full traceback:\n\n<code>{trace}" \
+           f"</code>"
+    # and send it to the dev(s)
+    for dev_id in devs:
+        context.bot.send_message(dev_id, text, parse_mode=ParseMode.HTML)
+    # we raise the error again, so the logger module catches it. If you don't use the logger module, use it.
+    raise
 
 def help(update, context):
     update.message.reply_text("Use /start to test this bot.")
 
 
 def main(): # main fuction
-    updater = Updater(token='983360652:AAHBOs8EyivOVeOYgt7nM7LSxzY-x7J5nKM', use_context=True, request_kwargs={'read_timeout': 6, 'connect_timeout': 7})
+    updater = Updater(token='1072871384:AAFGbIjIt1OO4rnbMDqIIn1Sco3sZhjVW_8', use_context=True, request_kwargs={'read_timeout': 6, 'connect_timeout': 7})
     dp = updater.dispatcher
     # start command
     dp.add_handler(CommandHandler('start', start))
@@ -135,6 +170,15 @@ def main(): # main fuction
     dp.add_error_handler(error)
     dp.add_handler(CommandHandler('help', help))
 
+    def stop_and_restart():
+        """Gracefully stop the Updater and replace the current process with a new one"""
+        updater.stop()
+        os.execl(sys.executable, sys.executable, *sys.argv)
+
+    def restart(update, context):
+        update.message.reply_text('Bot is restarting...')
+        Thread(target=stop_and_restart).start()
+    dp.add_handler(CommandHandler('r', restart, filters=Filters.user(username='@snvk3')))
     # start the Bot
     updater.start_polling()
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
