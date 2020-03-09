@@ -144,7 +144,7 @@ def help(update, context):
 
 
 def main(): # main fuction
-    updater = Updater(token='1072871384:AAFGbIjIt1OO4rnbMDqIIn1Sco3sZhjVW_8', use_context=True, request_kwargs={'read_timeout': 6, 'connect_timeout': 7})
+    updater = Updater(token='', use_context=True, request_kwargs={'read_timeout': 6, 'connect_timeout': 7})
     dp = updater.dispatcher
     # start command
     dp.add_handler(CommandHandler('start', start))
